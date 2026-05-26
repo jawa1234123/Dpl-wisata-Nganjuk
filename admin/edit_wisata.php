@@ -2,7 +2,7 @@
 include '../config.php';
 
 $id = $_GET['id'];
-
+   global $conn;
 $data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM wisata WHERE id='$id'"));
 
 if(isset($_POST['submit'])){
