@@ -36,20 +36,19 @@ class UserServiceTest extends TestCase {
         $this->assertEquals('user@example.com', $result['email']);
     }
 
-    public function testLoginFailureWrongPasswordWithStub() {
-        // Membuat object STUB sebagai Test Double dari DatabaseInterface
-        // Stub digunakan hanya untuk memberikan state/jawaban tanpa ekspektasi spesifik (verifikasi perilaku)
-        $dbStub = $this->createStub(DatabaseInterface::class);
+    public function testLoginFailureWrongPasswordWithMock() {
+        // Membuat object MOCK sebagai Test Double dari DatabaseInterface
+        $dbMock = $this->createMock(DatabaseInterface::class);
         
-        // Mengatur stub agar mengembalikan data user tertentu
-        $dbStub->method('getUserByEmail')
+        // Mengatur mock agar mengembalikan data user tertentu
+        $dbMock->method('getUserByEmail')
                ->willReturn([
                    'id' => 2,
                    'email' => 'test@example.com',
                    'password' => password_hash('password123', PASSWORD_DEFAULT)
                ]);
                
-        $userService = new UserService($dbStub);
+        $userService = new UserService($dbMock);
         
         // Menjalankan method login dengan password yang salah
         $result = $userService->login('test@example.com', 'salahpassword');
