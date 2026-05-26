@@ -9,51 +9,75 @@ require_once __DIR__ . '/../src/UserService.php';
 
 class UserServiceTest extends TestCase {
     
-    public function testLoginSuccessWithMock() {
-        // Membuat object MOCK sebagai Test Double dari DatabaseInterface
-        $dbMock = $this->createMock(DatabaseInterface::class);
-        
-        // Mendefinisikan ekspektasi (expectation) dari mock:
-        // method 'getUserByEmail' akan dipanggil 1 kali dengan argumen 'user@example.com'
-        $dbMock->expects($this->once())
+    private $dbMock;
+    private $userService;
+
+    /**
+     * setUp() dipanggil secara otomatis SEBELUM setiap method test dijalankan.
+     * Ini digunakan untuk menyiapkan environment yang sama agar tidak perlu menulis kode berulang.
+     */
+    protected function setUp(): void {
+        $this->dbMock = $this->createMock(DatabaseInterface::class);
+        $this->userService = new UserService($this->dbMock);
+    }
+
+    public function testLoginSuccess() {
+        // Memastikan method getUserByEmail dipanggil persis 1 kali
+        $this->dbMock->expects($this->once())
                ->method('getUserByEmail')
                ->with('user@example.com')
                ->willReturn([
                    'id' => 1,
                    'email' => 'user@example.com',
-                   // Password asli adalah 'rahasia123'
                    'password' => password_hash('rahasia123', PASSWORD_DEFAULT)
                ]);
                
-        // Menginjeksi mock object ke dalam UserService (Dependency Injection)
-        $userService = new UserService($dbMock);
+        $result = $this->userService->login('user@example.com', 'rahasia123');
         
-        // Menjalankan method login yang akan diuji
-        $result = $userService->login('user@example.com', 'rahasia123');
-        
-        // Assertion: memastikan hasil login berhasil dan mengembalikan data user
-        $this->assertIsArray($result, "Login harusnya berhasil dan mengembalikan array data user");
+        // Assertions yang lebih spesifik
+        $this->assertIsArray($result, "Login harus mengembalikan array data user");
+        $this->assertArrayHasKey('id', $result, "Array hasil harus memiliki key 'id'");
         $this->assertEquals('user@example.com', $result['email']);
     }
 
-    public function testLoginFailureWrongPasswordWithMock() {
-        // Membuat object MOCK sebagai Test Double dari DatabaseInterface
-        $dbMock = $this->createMock(DatabaseInterface::class);
-        
-        // Mengatur mock agar mengembalikan data user tertentu
-        $dbMock->method('getUserByEmail')
-               ->willReturn([
-                   'id' => 2,
-                   'email' => 'test@example.com',
-                   'password' => password_hash('password123', PASSWORD_DEFAULT)
-               ]);
+    public function testLoginFailureEmailNotFound() {
+        // Skenario: Database tidak menemukan user (mengembalikan null)
+        $this->dbMock->method('getUserByEmail')
+               ->willReturn(null);
                
-        $userService = new UserService($dbMock);
+        $result = $this->userService->login('unknown@example.com', 'password123');
         
-        // Menjalankan method login dengan password yang salah
-        $result = $userService->login('test@example.com', 'salahpassword');
-        
-        // Assertion: memastikan hasil login gagal (false) karena password salah
-        $this->assertFalse($result, "Login harusnya gagal karena password salah");
+        $this->assertFalse($result, "Login harus gagal jika email tidak ditemukan");
+    }
+
+    /**
+     * @dataProvider invalidLoginProvider
+     * 
+     * Menggunakan Data Provider untuk menguji banyak skenario kegagalan sekaligus 
+     * tanpa harus menulis ulang method yang mirip-mirip berkali-kali.
+     */
+    public function testLoginFailuresWithProvider($email, $password, $dbReturnValue) {
+        $this->dbMock->method('getUserByEmail')
+               ->willReturn($dbReturnValue);
+
+        $result = $this->userService->login($email, $password);
+
+        $this->assertFalse($result, "Login harus gagal untuk skenario password/email salah");
+    }
+
+    /**
+     * Method ini menyediakan array berisi skenario data untuk diuji di testLoginFailuresWithProvider
+     */
+    public static function invalidLoginProvider() {
+        $validDbUser = [
+            'id' => 2,
+            'email' => 'test@example.com',
+            'password' => password_hash('password123', PASSWORD_DEFAULT)
+        ];
+
+        return [
+            'Skenario: Password Salah'  => ['test@example.com', 'salahpassword', $validDbUser],
+            'Skenario: Password Kosong' => ['test@example.com', '', $validDbUser]
+        ];
     }
 }
