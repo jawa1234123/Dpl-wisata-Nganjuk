@@ -1,20 +1,21 @@
 <?php
 include 'config.php';
+use App\Repositories\EventRepository;
 
 // VALIDASI ID
 if(!isset($_GET['id']) || $_GET['id'] == ''){
-    echo "<h2 style='color:white;text-align:center;margin-top:50px'>ID tidak ditemukan</h2>";
+    echo "<h2 style='text-align:center;margin-top:50px;font-family:sans-serif;'>ID tidak ditemukan</h2>";
     exit;
 }
 
 $id = (int)$_GET['id'];
 
 // AMBIL DATA
-$query = mysqli_query($conn,"SELECT * FROM event WHERE id=$id");
-$data = mysqli_fetch_assoc($query);
+$eventRepo = new EventRepository($conn);
+$data = $eventRepo->getById($id);
 
 if(!$data){
-    echo "<h2 style='color:white;text-align:center;margin-top:50px'>Data tidak ditemukan</h2>";
+    echo "<h2 style='text-align:center;margin-top:50px;font-family:sans-serif;'>Data tidak ditemukan</h2>";
     exit;
 }
 
@@ -25,178 +26,285 @@ function safe($data, $key, $default='-'){
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-<title><?= safe($data,'judul') ?></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= safe($data,'judul') ?> - Wonderful Nganjuk</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<style>
-body{
-    margin:0;
-    background:#020617;
-    color:white;
-    font-family:'Segoe UI', sans-serif;
-}
+    <style>
+        :root {
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --accent-red: #0369a1; /* Biru Nganjuk */
+        }
 
-/* HERO */
-.hero{
-    height:75vh;
-    position:relative;
-}
+        body {
+            margin: 0;
+            background: var(--bg-light);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+        }
 
-.hero img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    filter:brightness(55%);
-}
+        h1, h2, h3, h4, h5, .brand-text {
+            font-family: 'Playfair Display', serif;
+        }
 
-.overlay{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:linear-gradient(to top, rgba(2,6,23,1), transparent);
-}
+        /* NAVBAR */
+        .navbar-custom {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 5%;
+            z-index: 100;
+        }
 
-/* TEXT HERO */
-.hero-text{
-    position:absolute;
-    bottom:60px;
-    left:60px;
-}
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-.hero-text h1{
-    font-size:46px;
-    font-weight:bold;
-}
+        .btn-back:hover {
+            background: white;
+            color: var(--text-main);
+        }
 
-.hero-text p{
-    opacity:0.8;
-}
+        /* HERO HEADER */
+        .hero-header {
+            position: relative;
+            height: 70vh;
+            width: 100%;
+        }
 
-/* CONTENT */
-.container{
-    margin-top:-80px;
-}
+        .hero-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-/* CARD */
-.card-event{
-    background:rgba(17,24,39,0.85);
-    backdrop-filter:blur(12px);
-    border-radius:20px;
-    padding:30px;
-    box-shadow:0 20px 60px rgba(0,0,0,0.6);
-}
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.7) 100%);
+        }
 
-/* GRID */
-.info-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
-    margin-bottom:20px;
-}
+        .hero-text {
+            position: absolute;
+            bottom: 50px;
+            left: 5%;
+            color: white;
+            z-index: 10;
+        }
 
-/* BOX */
-.info-box{
-    background:rgba(255,255,255,0.03);
-    padding:15px;
-    border-radius:12px;
-}
+        .badge-kategori {
+            background: var(--accent-red);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-.label{
-    font-size:13px;
-    opacity:0.7;
-}
+        .hero-text h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-style: italic;
+        }
 
-.value{
-    font-size:15px;
-    font-weight:500;
-}
+        .hero-text .location {
+            font-size: 1.2rem;
+            font-weight: 400;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
 
-/* DESKRIPSI */
-.deskripsi{
-    line-height:1.7;
-    opacity:0.9;
-}
+        /* MAIN CONTENT */
+        .content-wrapper {
+            background: var(--bg-white);
+            padding: 60px 5%;
+            margin-top: -20px;
+            position: relative;
+            z-index: 20;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+        }
 
-/* BADGE */
-.badge-event{
-    background:#f59e0b;
-    padding:5px 10px;
-    border-radius:8px;
-    font-size:12px;
-}
+        .article-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-/* BUTTON */
-.back-btn{
-    margin-top:20px;
-    display:inline-block;
-    padding:10px 20px;
-    border-radius:10px;
-    background:linear-gradient(135deg,#f59e0b,#ef4444);
-    color:white;
-    text-decoration:none;
-}
-</style>
+        .article-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #475569;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
 
+        .article-content p:first-of-type::first-letter {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            float: left;
+            line-height: 0.8;
+            margin-right: 15px;
+            margin-top: 5px;
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        /* INFO GRID */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 50px 0;
+            background: var(--bg-light);
+            padding: 40px;
+            border-radius: 16px;
+            border-left: 5px solid var(--accent-red);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .info-icon {
+            font-size: 1.5rem;
+            color: var(--accent-red);
+            background: white;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .info-text h4 {
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        .info-text p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin: 0;
+            text-align: left;
+        }
+        
+        .info-text p::first-letter {
+            font-size: 0.95rem;
+            font-family: 'Montserrat', sans-serif;
+            float: none;
+            color: var(--text-muted);
+        }
+
+        footer {
+            background: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .footer-logo {
+            font-family: 'Playfair Display', serif; 
+            font-size: 1.5rem; 
+            margin-bottom: 10px;
+        }
+        .footer-logo span {
+            color: var(--accent-red);
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- HERO -->
-<div class="hero">
-    <img src="assets/img/<?= safe($data,'gambar','default.jpg') ?>"
-         onerror="this.src='assets/img/default.jpg'">
+<!-- NAVBAR -->
+<div class="navbar-custom">
+    <a href="index.php" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+</div>
 
-    <div class="overlay"></div>
-
+<!-- HERO HEADER -->
+<div class="hero-header">
+    <img src="assets/img/<?= safe($data,'gambar','default.jpg') ?>" onerror="this.src='assets/img/default.jpg'" alt="<?= safe($data,'judul') ?>">
+    <div class="hero-overlay"></div>
+    
     <div class="hero-text">
-        <span class="badge-event">Event</span>
+        <span class="badge-kategori">Event Budaya</span>
         <h1><?= safe($data,'judul') ?></h1>
-        <p><?= safe($data,'lokasi') ?></p>
+        <div class="location"><i class="fa-solid fa-location-dot text-danger me-2"></i> <?= safe($data,'lokasi') ?></div>
     </div>
 </div>
 
-<!-- CONTENT -->
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+<!-- MAIN CONTENT -->
+<div class="content-wrapper">
+    <div class="article-content">
+        
+        <p><?= nl2br(safe($data,'deskripsi','Belum ada deskripsi mendetail mengenai event ini. Nantikan keseruannya hanya di Kabupaten Nganjuk!')) ?></p>
 
-            <div class="card-event">
-
-                <h4>📅 Detail Event</h4>
-                <hr>
-
-                <!-- GRID -->
-                <div class="info-grid">
-
-                    <div class="info-box">
-                        <div class="label">📍 Lokasi</div>
-                        <div class="value"><?= safe($data,'lokasi') ?></div>
-                    </div>
-
-                    <div class="info-box">
-                        <div class="label">📆 Tanggal</div>
-                        <div class="value"><?= safe($data,'tanggal') ?></div>
-                    </div>
-
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="info-text">
+                    <h4>Lokasi Pelaksanaan</h4>
+                    <p><?= safe($data,'lokasi') ?></p>
                 </div>
-
-                <!-- DESKRIPSI -->
-                <div class="info-box">
-                    <div class="label">📝 Deskripsi</div>
-                    <div class="deskripsi">
-                        <?= safe($data,'deskripsi','Belum ada deskripsi') ?>
-                    </div>
-                </div>
-
-                <a href="index.php" class="back-btn">← Kembali</a>
-
             </div>
-
+            <div class="info-item">
+                <div class="info-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                <div class="info-text">
+                    <h4>Tanggal Event</h4>
+                    <p><?= safe($data,'tanggal') ?></p>
+                </div>
+            </div>
         </div>
+
     </div>
 </div>
+
+<footer>
+    <div class="footer-logo">Wonderful <span>Nganjuk</span></div>
+    &copy; <?= date('Y') ?> Wisata Nganjuk
+</footer>
 
 </body>
 </html>

@@ -1,49 +1,42 @@
 <?php
 include '../config.php';
 include 'auth.php';
-include 'layout.php';
+use App\Repositories\EventRepository;
 
 $id = $_GET['id'];
-$d = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM event WHERE id='$id'"));
+$eventRepo = new EventRepository($conn);
+$d = $eventRepo->getById($id);
 
 if(isset($_POST['update'])){
-
-    $judul     = $_POST['judul'];
-    $deskripsi = $_POST['deskripsi'];
-    $tanggal   = $_POST['tanggal'];
-    $lokasi    = $_POST['lokasi'];
 
     $file = $_FILES['gambar']['name'];
 
     if($file != ""){
-
         $tmp = $_FILES['gambar']['tmp_name'];
         $nama_file = time().'_'.$file;
         move_uploaded_file($tmp,"../assets/img/".$nama_file);
-
-        mysqli_query($conn,"UPDATE event SET
-        judul='$judul',
-        deskripsi='$deskripsi',
-        tanggal='$tanggal',
-        lokasi='$lokasi',
-        gambar='$nama_file'
-        WHERE id='$id'");
-
     } else {
-
-        mysqli_query($conn,"UPDATE event SET
-        judul='$judul',
-        deskripsi='$deskripsi',
-        tanggal='$tanggal',
-        lokasi='$lokasi'
-        WHERE id='$id'");
+        $nama_file = $d['gambar'];
     }
 
+    $eventRepo->update($id, [
+        'judul' => $_POST['judul'],
+        'deskripsi' => $_POST['deskripsi'],
+        'tanggal' => $_POST['tanggal'],
+        'lokasi' => $_POST['lokasi'],
+        'gambar' => $nama_file
+    ]);
+
     header("Location: event.php");
+    exit;
 }
 ?>
 
-<h2>Edit Event</h2>
+<?php ob_start(); ?>
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0" style="font-weight: 600;">Edit Event</h4>
+    </div>
 
 <form method="POST" enctype="multipart/form-data">
 
@@ -57,6 +50,12 @@ if(isset($_POST['update'])){
 
 <input type="file" name="gambar" class="form-control mb-2">
 
-<button name="update" class="btn btn-warning">Update</button>
-
+<button name="update" class="btn btn-warning text-white">Update</button>
+<a href="event.php" class="btn btn-secondary">Kembali</a>
 </form>
+</div>
+<?php
+$content = ob_get_clean();
+$active_page = 'event.php';
+include 'layout.php';
+?>

@@ -1,40 +1,38 @@
 <?php
 include '../config.php';
 include 'auth.php';
-include 'layout.php';
+use App\Repositories\EventRepository;
 
 if(isset($_POST['submit'])){
-       global $conn;
-
-    $judul     = $_POST['judul'];
-    $deskripsi = $_POST['deskripsi'];
-    $tanggal   = $_POST['tanggal'];
-    $lokasi    = $_POST['lokasi'];
 
     $file   = $_FILES['gambar']['name'];
     $tmp    = $_FILES['gambar']['tmp_name'];
+    $nama_file = "";
 
     if($file != ""){
-
         $nama_file = time().'_'.$file;
-
-        if(move_uploaded_file($tmp, "../assets/img/".$nama_file)){
-
-            mysqli_query($conn,"INSERT INTO event 
-            (judul,deskripsi,tanggal,lokasi,gambar)
-            VALUES ('$judul','$deskripsi','$tanggal','$lokasi','$nama_file')");
-
-            header("Location: event.php");
-            exit;
-
-        } else {
-            echo "Upload gagal";
-        }
+        move_uploaded_file($tmp, "../assets/img/".$nama_file);
     }
+
+    $eventRepo = new EventRepository($conn);
+    $eventRepo->create([
+        'judul' => $_POST['judul'],
+        'deskripsi' => $_POST['deskripsi'],
+        'tanggal' => $_POST['tanggal'],
+        'lokasi' => $_POST['lokasi'],
+        'gambar' => $nama_file
+    ]);
+
+    header("Location: event.php");
+    exit;
 }
 ?>
 
-<h2>Tambah Event</h2>
+<?php ob_start(); ?>
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0" style="font-weight: 600;">Tambah Event</h4>
+    </div>
 
 <form method="POST" enctype="multipart/form-data">
 
@@ -49,5 +47,11 @@ if(isset($_POST['submit'])){
 <input type="file" name="gambar" class="form-control mb-2" required>
 
 <button name="submit" class="btn btn-success">Simpan</button>
-
+<a href="event.php" class="btn btn-secondary">Kembali</a>
 </form>
+</div>
+<?php
+$content = ob_get_clean();
+$active_page = 'event.php';
+include 'layout.php';
+?>

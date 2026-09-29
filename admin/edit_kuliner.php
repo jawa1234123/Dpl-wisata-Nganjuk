@@ -1,21 +1,13 @@
 <?php
 include '../config.php';
 include 'auth.php';
-include 'layout.php';
+use App\Repositories\KulinerRepository;
 
 $id = $_GET['id'];
-  global $conn;
-
-
-// ambil data lama
-$data = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM kuliner WHERE id=$id"));
+$kulinerRepo = new KulinerRepository($conn);
+$data = $kulinerRepo->getById($id);
 
 if(isset($_POST['submit'])){
-
-    $nama      = mysqli_real_escape_string($conn, $_POST['nama']);
-    $lokasi    = mysqli_real_escape_string($conn, $_POST['lokasi']);
-    $deskripsi = mysqli_real_escape_string($conn, $_POST['deskripsi']);
-    $jam_buka  = mysqli_real_escape_string($conn, $_POST['jam_buka']);
 
     // upload gambar
     if($_FILES['gambar']['name']){
@@ -31,20 +23,24 @@ if(isset($_POST['submit'])){
         $gambar = $data['gambar'];
     }
 
-    mysqli_query($conn,"UPDATE kuliner SET 
-        nama_kuliner='$nama',
-        lokasi='$lokasi',
-        deskripsi='$deskripsi',
-        jam_buka='$jam_buka',
-        gambar='$gambar'
-        WHERE id=$id");
+    $kulinerRepo->update($id, [
+        'nama_kuliner' => $_POST['nama'],
+        'lokasi' => $_POST['lokasi'],
+        'deskripsi' => $_POST['deskripsi'],
+        'jam_buka' => $_POST['jam_buka'],
+        'gambar' => $gambar
+    ]);
 
     header("Location: kuliner.php");
     exit;
 }
 ?>
 
-<h2>Edit Kuliner</h2>
+<?php ob_start(); ?>
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0" style="font-weight: 600;">Edit Kuliner</h4>
+    </div>
 
 <form method="POST" enctype="multipart/form-data">
 
@@ -70,5 +66,12 @@ if(isset($_POST['submit'])){
     <!-- GANTI GAMBAR -->
     <input type="file" name="gambar" class="form-control mb-2">
 
-    <button name="submit" class="btn btn-warning">Update</button>
+    <button name="submit" class="btn btn-warning text-white">Update</button>
+    <a href="kuliner.php" class="btn btn-secondary">Kembali</a>
 </form>
+</div>
+<?php
+$content = ob_get_clean();
+$active_page = 'kuliner.php';
+include 'layout.php';
+?>

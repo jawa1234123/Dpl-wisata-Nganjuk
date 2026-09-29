@@ -1,38 +1,52 @@
 <?php
 include '../config.php';
-if(!isset($_SESSION['admin'])) header("Location: login.php");
-  global $conn;
+use App\Repositories\KulinerRepository;
 
-include 'layout.php';
+$kulinerRepo = new KulinerRepository($conn);
+$kulinerList = $kulinerRepo->getAll();
 
-$data = mysqli_query($conn,"SELECT * FROM kuliner");
+ob_start();
 ?>
-
-<h2>Kelola Kuliner</h2>
-
-<a href="tambah_kuliner.php?tipe=kuliner" class="btn btn-success mb-3">+ Tambah</a>
-
-<table class="table table-dark">
-<tr>
-<th>No</th>
-<th>Nama</th>
-<th>Aksi</th>
-</tr>
-
-<?php $no=1; while($d=mysqli_fetch_assoc($data)){ ?>
-<tr>
-<td><?= $no++ ?></td>
-<td><?= $d['nama_kuliner'] ?></td>
-
-<td>
-<a href="edit_kuliner.php?id=<?= $d['id'] ?>&tipe=kuliner" class="btn btn-warning btn-sm">Edit</a>
-<a href="hapus_kuliner.php?id=<?= $d['id'] ?>&tipe=kuliner" class="btn btn-danger btn-sm">Hapus</a>
-</td>
-</tr>
-<?php } ?>
-
-</table>
-
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0" style="font-weight: 600;">Data Kuliner Khas</h4>
+        <a href="tambah_kuliner.php?tipe=kuliner" class="btn btn-success"><i class="fa-solid fa-plus me-2"></i> Tambah Kuliner</a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Kuliner</th>
+                    <th>Lokasi</th>
+                    <th>Jam Operasional</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php $i=1; foreach($kulinerList as $d){ ?>
+                <tr>
+                    <td><?= $i++ ?></td>
+                    <td class="fw-medium text-dark"><?= $d['nama_kuliner'] ?></td>
+                    <td class="text-muted"><i class="fa-solid fa-location-dot me-1"></i> <?= $d['lokasi'] ?></td>
+                    <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill"><i class="fa-solid fa-clock me-1"></i> <?= $d['jam_buka'] ?></span></td>
+                    <td class="text-center">
+                        <a href="edit_kuliner.php?id=<?= $d['id'] ?>&tipe=kuliner" class="btn btn-sm btn-warning me-1" title="Edit">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <a href="hapus_kuliner.php?id=<?= $d['id'] ?>&tipe=kuliner" class="btn btn-sm btn-danger" title="Hapus" onclick="return confirm('Apakah Anda yakin ingin menghapus data kuliner ini?');">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
 </div>
-</body>
-</html>
+<?php
+$content = ob_get_clean();
+$active_page = 'kuliner.php';
+include 'layout.php';
+?>
