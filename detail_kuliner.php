@@ -26,15 +26,46 @@ function safe($data, $key, $default='-'){
     return isset($data[$key]) && $data[$key] != '' ? $data[$key] : $default;
 }
 
-// Proses tambah ulasan
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review'])) {
+// Cek apakah user sudah memberikan ulasan
+$user_review = null;
+if (isset($_SESSION['user_id'])) {
+    $u_id = $_SESSION['user_id'];
+    $cek_rev = mysqli_query($conn, "SELECT * FROM reviews WHERE tipe='kuliner' AND item_id=$id AND user_id=$u_id");
+    if (mysqli_num_rows($cek_rev) > 0) {
+        $user_review = mysqli_fetch_assoc($cek_rev);
+    }
+}
+
+// Proses form ulasan (Tambah, Edit, Hapus)
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_SESSION['user_id'])) {
         $user_id = $_SESSION['user_id'];
-        $rating = (int)$_POST['rating'];
-        $komentar = mysqli_real_escape_string($conn, $_POST['komentar']);
-        mysqli_query($conn, "INSERT INTO reviews (tipe, item_id, user_id, rating, komentar) VALUES ('kuliner', $id, $user_id, $rating, '$komentar')");
-        header("Location: detail_kuliner.php?id=$id&review_success=1");
-        exit;
+        
+        if (isset($_POST['submit_review'])) {
+            if (!$user_review) {
+                $rating = (int)$_POST['rating'];
+                $komentar = mysqli_real_escape_string($conn, $_POST['komentar']);
+                mysqli_query($conn, "INSERT INTO reviews (tipe, item_id, user_id, rating, komentar) VALUES ('kuliner', $id, $user_id, $rating, '$komentar')");
+                header("Location: detail_kuliner.php?id=$id&review_success=1");
+                exit;
+            }
+        } elseif (isset($_POST['edit_review'])) {
+            if ($user_review) {
+                $rating = (int)$_POST['rating'];
+                $komentar = mysqli_real_escape_string($conn, $_POST['komentar']);
+                $rev_id = $user_review['id'];
+                mysqli_query($conn, "UPDATE reviews SET rating=$rating, komentar='$komentar' WHERE id=$rev_id AND user_id=$user_id");
+                header("Location: detail_kuliner.php?id=$id&review_updated=1");
+                exit;
+            }
+        } elseif (isset($_POST['delete_review'])) {
+            if ($user_review) {
+                $rev_id = $user_review['id'];
+                mysqli_query($conn, "DELETE FROM reviews WHERE id=$rev_id AND user_id=$user_id");
+                header("Location: detail_kuliner.php?id=$id&review_deleted=1");
+                exit;
+            }
+        }
     } else {
         $error_msg = "Anda harus login untuk memberikan ulasan.";
     }
@@ -337,28 +368,58 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
             <?php endif; ?>
 
             <?php if(isset($_SESSION['user_id'])): ?>
-            <div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
-                <div class="card-body p-4">
-                    <h5 class="mb-3" style="font-family: 'Montserrat', sans-serif; font-weight: 600;">Tulis Ulasan Anda</h5>
-                    <form method="POST" action="">
-                        <div class="mb-3">
-                            <label class="form-label">Rating</label>
-                            <select name="rating" class="form-select" required style="width: 150px;">
-                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
-                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
-                                <option value="3">⭐⭐⭐ (3/5)</option>
-                                <option value="2">⭐⭐ (2/5)</option>
-                                <option value="1">⭐ (1/5)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Komentar</label>
-                            <textarea name="komentar" class="form-control" rows="3" required placeholder="Bagaimana pengalaman Anda?"></textarea>
-                        </div>
-                        <button type="submit" name="submit_review" class="btn btn-warning text-white" style="background: var(--accent-gold); border: none; padding: 10px 25px; border-radius: 30px;">Kirim Ulasan</button>
-                    </form>
+                <?php if($user_review): ?>
+                <!-- Form Edit/Hapus Ulasan -->
+                <div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; border-left: 4px solid #f59e0b;">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3" style="font-family: 'Montserrat', sans-serif; font-weight: 600;">Ulasan Anda</h5>
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <select name="rating" class="form-select" required style="width: 150px;">
+                                    <option value="5" <?= $user_review['rating']==5 ? 'selected':'' ?>>⭐⭐⭐⭐⭐ (5/5)</option>
+                                    <option value="4" <?= $user_review['rating']==4 ? 'selected':'' ?>>⭐⭐⭐⭐ (4/5)</option>
+                                    <option value="3" <?= $user_review['rating']==3 ? 'selected':'' ?>>⭐⭐⭐ (3/5)</option>
+                                    <option value="2" <?= $user_review['rating']==2 ? 'selected':'' ?>>⭐⭐ (2/5)</option>
+                                    <option value="1" <?= $user_review['rating']==1 ? 'selected':'' ?>>⭐ (1/5)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Komentar</label>
+                                <textarea name="komentar" class="form-control" rows="3" required><?= htmlspecialchars($user_review['komentar']) ?></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="edit_review" class="btn btn-warning text-white" style="background: var(--accent-gold); border: none; padding: 10px 25px; border-radius: 30px;">Update Ulasan</button>
+                                <button type="submit" name="delete_review" class="btn btn-danger" style="border: none; padding: 10px 25px; border-radius: 30px;" onclick="return confirm('Yakin ingin menghapus ulasan ini?');">Hapus Ulasan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
+                <?php else: ?>
+                <!-- Form Tambah Ulasan -->
+                <div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3" style="font-family: 'Montserrat', sans-serif; font-weight: 600;">Tulis Ulasan Anda</h5>
+                        <form method="POST" action="">
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <select name="rating" class="form-select" required style="width: 150px;">
+                                    <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                    <option value="3">⭐⭐⭐ (3/5)</option>
+                                    <option value="2">⭐⭐ (2/5)</option>
+                                    <option value="1">⭐ (1/5)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Komentar</label>
+                                <textarea name="komentar" class="form-control" rows="3" required placeholder="Bagaimana pengalaman Anda?"></textarea>
+                            </div>
+                            <button type="submit" name="submit_review" class="btn btn-warning text-white" style="background: var(--accent-gold); border: none; padding: 10px 25px; border-radius: 30px;">Kirim Ulasan</button>
+                        </form>
+                    </div>
+                </div>
+                <?php endif; ?>
             <?php else: ?>
             <div class="alert alert-info text-center" style="border-radius: 10px;">
                 Silakan <a href="login_user.php" class="alert-link">Login</a> untuk memberikan ulasan.
@@ -406,15 +467,23 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('review_success')) {
+    if (urlParams.has('review_success') || urlParams.has('review_updated') || urlParams.has('review_deleted')) {
+        let titleMsg = 'Berhasil!';
+        let textMsg = '';
+        if (urlParams.has('review_success')) textMsg = 'Ulasan Anda berhasil dikirimkan.';
+        if (urlParams.has('review_updated')) textMsg = 'Ulasan Anda berhasil diperbarui.';
+        if (urlParams.has('review_deleted')) textMsg = 'Ulasan Anda berhasil dihapus.';
+
         Swal.fire({
             icon: 'success',
-            title: 'Terima Kasih!',
-            text: 'Ulasan Anda berhasil dikirimkan.',
+            title: titleMsg,
+            text: textMsg,
             timer: 3000,
             showConfirmButton: false
         });
         urlParams.delete('review_success');
+        urlParams.delete('review_updated');
+        urlParams.delete('review_deleted');
         let newUrl = window.location.pathname + '?' + urlParams.toString();
         window.history.replaceState({}, document.title, newUrl);
     }

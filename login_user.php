@@ -76,8 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
             <input type="email" name="email" class="form-control" required placeholder="user@gmail.com">
         </div>
         <div class="mb-4">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required placeholder="***">
+            <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label mb-0">Password</label>
+                <a href="forgot_password.php" style="font-size: 0.85rem; color: #15803d; text-decoration: none;">Lupa Password?</a>
+            </div>
+            <input type="password" name="password" class="form-control mt-2" required placeholder="***">
         </div>
         <button type="submit" name="login" class="btn btn-success w-100 mb-3" style="background: #15803d; border:none; padding:10px;">Masuk</button>
         
