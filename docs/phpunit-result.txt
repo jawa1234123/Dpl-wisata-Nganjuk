@@ -1,0 +1,80 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.12
+Configuration: phpunit.xml
+
+................................................................  64 / 64 (100%)
+
+Time: 00:04.659, Memory: 10.00 MB
+
+Review Service
+ ✔ Rating valid di batas bawah dan atas
+ ✔ Rating tidak valid di luar batas
+ ✔ Komentar valid minimal lima karakter
+ ✔ Komentar tidak valid kurang dari lima karakter
+ ✔ Tambah review berhasil dengan data valid
+ ✔ Tambah review gagal jika database gagal
+ ✔ Tambah review gagal dengan input tidak valid
+ ✔ Hitung rata rating dengan beberapa review
+ ✔ Hitung rata rating dengan satu review
+ ✔ Hitung rata rating dengan array kosong mengembalikan nol
+ ✔ Hitung rata rating dibulatkan satu desimal
+ ✔ Format bintang lima menghasilkan lima bintang penuh
+ ✔ Format bintang nol menghasilkan lima bintang kosong
+ ✔ Format bintang tiga menghasilkan tiga penuh dua kosong
+ ✔ Format bintang dengan rata rata desimal
+ ✔ Get review by wisata memanggil query dengan id benar
+ ✔ Get review by wisata mengembalikan daftar review
+ ✔ Tambah review melakukan escape komentar
+ ✔ Tambah review mengeksekusi insert query
+
+User Service
+ ✔ Email valid dengan format benar
+ ✔ Email tidak valid dengan format salah
+ ✔ Password valid di batas minimum
+ ✔ Password tidak valid di bawah batas
+ ✔ Nama valid minimal tiga karakter
+ ✔ Registrasi berhasil jika email belum terdaftar
+ ✔ Registrasi gagal jika email sudah terdaftar
+ ✔ Registrasi gagal jika email tidak valid
+ ✔ Registrasi gagal jika password terlalu pendek
+ ✔ Registrasi gagal jika nama terlalu pendek
+ ✔ Registrasi gagal jika insert database gagal
+ ✔ Login berhasil dengan kredensial benar
+ ✔ Login gagal jika email tidak ditemukan
+ ✔ Login gagal jika password salah
+ ✔ Login gagal jika email kosong
+ ✔ Registrasi dan login menggunakan fake database
+ ✔ Registrasi duplikat menggunakan fake database
+ ✔ Registrasi melakukan escape string untuk keamanan
+ ✔ Registrasi mengeksekusi query select untuk cek email
+ ✔ Registrasi berhasil mengeksekusi insert
+ ✔ Registrasi gagal tidak mengeksekusi insert
+ ✔ Login memanggil escape string untuk email
+ ✔ Login tidak memanggil query jika input kosong
+ ✔ Registrasi berhasil memanggil query dua kali
+
+Wisata Service
+ ✔ Validasi wisata data lengkap valid
+ ✔ Validasi wisata kategori tidak valid
+ ✔ Validasi semua kategori valid
+ ✔ Validasi wisata field wajib kosong
+ ✔ Validasi koordinat numerik
+ ✔ Validasi koordinat tidak valid menambah error
+ ✔ Tambah wisata berhasil dengan data valid
+ ✔ Tambah wisata gagal jika database gagal
+ ✔ Tambah wisata gagal jika data tidak valid
+ ✔ Get wisata by id menemukan data
+ ✔ Get wisata by id mengembalikan null jika tidak ada
+ ✔ Get wisata by id dengan id tidak valid
+ ✔ Filter has koordinat hanya mengembalikan data berkoordinat
+ ✔ Filter has koordinat mengembalikan array kosong jika semua tanpa koordinat
+ ✔ Format nama gambar menghasilkan format ber timestamp
+ ✔ Format nama gambar membersihkan karakter spesial
+ ✔ Hapus wisata mengeksekusi query delete
+ ✔ Hapus wisata dengan id tidak valid tidak menyentuh database
+ ✔ Update wisata mengeksekusi query update
+ ✔ Get all wisata tanpa filter memanggil query yang benar
+ ✔ Get all wisata dengan kategori menggunakan filter
+
+OK (Tests: 64, Assertions: 149)
