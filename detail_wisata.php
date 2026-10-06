@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+/** @var mysqli $conn */
 use App\Repositories\WisataRepository;
 
 $id = $_GET['id'] ?? 0;
@@ -36,7 +37,7 @@ if (isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_SESSION['user_id'])) {
         $user_id = $_SESSION['user_id'];
-        
+
         if (isset($_POST['submit_review'])) {
             if (!$user_review) {
                 $rating = (int)$_POST['rating'];
@@ -70,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Ambil data ulasan
 $q_reviews = mysqli_query($conn, "SELECT r.*, u.nama as nama_user FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.tipe='wisata' AND r.item_id=$id ORDER BY r.id DESC");
 $reviews = [];
-while($row = mysqli_fetch_assoc($q_reviews)) {
+while ($row = mysqli_fetch_assoc($q_reviews)) {
     $reviews[] = $row;
 }
 ?>
@@ -374,12 +375,12 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
         <div class="reviews-section" style="margin-top: 50px;">
             <h2 style="font-size: 2rem; margin-bottom: 30px; text-align: center;">Ulasan Pengunjung</h2>
             
-            <?php if(isset($error_msg)): ?>
+            <?php if (isset($error_msg)) : ?>
                 <div class="alert alert-danger"><?= $error_msg ?></div>
             <?php endif; ?>
 
-            <?php if(isset($_SESSION['user_id'])): ?>
-                <?php if($user_review): ?>
+            <?php if (isset($_SESSION['user_id'])) : ?>
+                <?php if ($user_review) : ?>
                 <!-- Form Edit/Hapus Ulasan -->
                 <div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px; border-left: 4px solid #f59e0b;">
                     <div class="card-body p-4">
@@ -388,11 +389,11 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
                             <div class="mb-3">
                                 <label class="form-label">Rating</label>
                                 <select name="rating" class="form-select" required style="width: 150px;">
-                                    <option value="5" <?= $user_review['rating']==5 ? 'selected':'' ?>>⭐⭐⭐⭐⭐ (5/5)</option>
-                                    <option value="4" <?= $user_review['rating']==4 ? 'selected':'' ?>>⭐⭐⭐⭐ (4/5)</option>
-                                    <option value="3" <?= $user_review['rating']==3 ? 'selected':'' ?>>⭐⭐⭐ (3/5)</option>
-                                    <option value="2" <?= $user_review['rating']==2 ? 'selected':'' ?>>⭐⭐ (2/5)</option>
-                                    <option value="1" <?= $user_review['rating']==1 ? 'selected':'' ?>>⭐ (1/5)</option>
+                                    <option value="5" <?= $user_review['rating'] == 5 ? 'selected' : '' ?>>⭐⭐⭐⭐⭐ (5/5)</option>
+                                    <option value="4" <?= $user_review['rating'] == 4 ? 'selected' : '' ?>>⭐⭐⭐⭐ (4/5)</option>
+                                    <option value="3" <?= $user_review['rating'] == 3 ? 'selected' : '' ?>>⭐⭐⭐ (3/5)</option>
+                                    <option value="2" <?= $user_review['rating'] == 2 ? 'selected' : '' ?>>⭐⭐ (2/5)</option>
+                                    <option value="1" <?= $user_review['rating'] == 1 ? 'selected' : '' ?>>⭐ (1/5)</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -406,7 +407,7 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
                         </form>
                     </div>
                 </div>
-                <?php else: ?>
+                <?php else : ?>
                 <!-- Form Tambah Ulasan -->
                 <div class="card mb-4" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 12px;">
                     <div class="card-body p-4">
@@ -431,15 +432,15 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
                     </div>
                 </div>
                 <?php endif; ?>
-            <?php else: ?>
+            <?php else : ?>
             <div class="alert alert-info text-center" style="border-radius: 10px;">
                 Silakan <a href="login_user.php" class="alert-link">Login</a> untuk memberikan ulasan.
             </div>
             <?php endif; ?>
 
             <div class="review-list">
-                <?php if(count($reviews) > 0): ?>
-                    <?php foreach($reviews as $rev): ?>
+                <?php if (count($reviews) > 0) : ?>
+                    <?php foreach ($reviews as $rev) : ?>
                     <div class="card mb-3" style="border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border-radius: 10px;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -453,7 +454,7 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
                         </div>
                     </div>
                     <?php endforeach; ?>
-                <?php else: ?>
+                <?php else : ?>
                     <p class="text-center text-muted">Belum ada ulasan untuk tempat wisata ini. Jadilah yang pertama!</p>
                 <?php endif; ?>
             </div>
@@ -462,9 +463,9 @@ while($row = mysqli_fetch_assoc($q_reviews)) {
 
         <div class="share-section" style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #e2e8f0; text-align: center;">
             <h4 style="font-family: 'Montserrat', sans-serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 15px;">Bagikan ke Teman:</h4>
-            <a href="https://wa.me/?text=Lihat Wisata <?= urlencode($data['nama']) ?> di Nganjuk: <?= urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>" target="_blank" class="btn btn-success rounded-circle me-2" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-whatsapp"></i></a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>" target="_blank" class="btn btn-primary rounded-circle me-2" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-facebook-f"></i></a>
-            <a href="https://twitter.com/intent/tweet?url=<?= urlencode('http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>&text=Lihat Wisata <?= urlencode($data['nama']) ?> di Nganjuk!" target="_blank" class="btn btn-info text-white rounded-circle" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-twitter"></i></a>
+            <a href="https://wa.me/?text=Lihat Wisata <?= urlencode($data['nama']) ?> di Nganjuk: <?= urlencode('http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>" target="_blank" class="btn btn-success rounded-circle me-2" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode('http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>" target="_blank" class="btn btn-primary rounded-circle me-2" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://twitter.com/intent/tweet?url=<?= urlencode('http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']) ?>&text=Lihat Wisata <?= urlencode($data['nama']) ?> di Nganjuk!" target="_blank" class="btn btn-info text-white rounded-circle" style="width: 45px; height: 45px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-brands fa-twitter"></i></a>
         </div>
 
     </div>
